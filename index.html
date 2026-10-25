@@ -74,7 +74,8 @@
   }
   .btn.rsvp { background: var(--orange); color: var(--ink); }
   .btn.tix  { background: var(--cream); color: var(--ink); }
-  .btn:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--ink); }
+  .btn { -webkit-tap-highlight-color: transparent; }
+  .btn:active, .btn.pressed { transform: translate(3px,3px); box-shadow: 0 0 0 var(--ink); }
   .btn:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
 
   .sticker {
@@ -176,6 +177,21 @@
     }
     list.append(li);
   }
+
+  // Phones navigate the instant a tap lands, so the press never shows.
+  // Hold the pressed state briefly, then follow the link.
+  document.addEventListener("touchstart", () => {}, { passive: true }); // lets :active fire on iOS
+  list.addEventListener("click", e => {
+    const a = e.target.closest(".btn");
+    if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    a.classList.add("pressed");
+    setTimeout(() => { location.href = a.href; }, 140);
+  });
+  // Coming back with the Back button can restore the page mid-press
+  addEventListener("pageshow", () => {
+    document.querySelectorAll(".btn.pressed").forEach(b => b.classList.remove("pressed"));
+  });
 </script>
 </body>
 </html>
