@@ -178,22 +178,37 @@
     list.append(li);
   }
 
+  // Coming back (Back button, or switching back from the Partiful app) can restore the page mid-press
+  function release() {
+    document.querySelectorAll(".btn.pressed").forEach(b => { delete b.dataset.going; b.classList.remove("pressed"); });
+  }
+
   // Phones navigate the instant a tap lands, so the press never shows.
-  // Hold the pressed state briefly, then follow the link.
-  document.addEventListener("touchstart", () => {}, { passive: true }); // lets :active fire on iOS
+  // Press on touch-down and hold it through the click, then follow the link.
+  // (Leaning on :active instead pops the button back up between finger-lift and click.)
+  list.addEventListener("pointerdown", e => {
+    const a = e.target.closest(".btn");
+    if (a && e.pointerType !== "mouse") a.classList.add("pressed");
+  });
+  // A touch that turns into a scroll never clicks
+  list.addEventListener("pointercancel", release);
+  list.addEventListener("pointerup", e => {
+    if (e.pointerType === "mouse") return;
+    const a = e.target.closest(".btn");
+    setTimeout(() => { if (a && !a.dataset.going) a.classList.remove("pressed"); }, 300);
+  });
   list.addEventListener("click", e => {
     const a = e.target.closest(".btn");
     if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     a.classList.add("pressed");
+    a.dataset.going = "1";
     setTimeout(() => {
       location.href = a.href;
       // Partiful links open the app and leave this page in place, so release the button
-      setTimeout(() => a.classList.remove("pressed"), 400);
+      setTimeout(() => { delete a.dataset.going; a.classList.remove("pressed"); }, 400);
     }, 140);
   });
-  // Coming back (Back button, or switching back from the Partiful app) can restore the page mid-press
-  const release = () => document.querySelectorAll(".btn.pressed").forEach(b => b.classList.remove("pressed"));
   addEventListener("pageshow", release);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) release(); });
 </script>
