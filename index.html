@@ -186,12 +186,16 @@
     if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     a.classList.add("pressed");
-    setTimeout(() => { location.href = a.href; }, 140);
+    setTimeout(() => {
+      location.href = a.href;
+      // Partiful links open the app and leave this page in place, so release the button
+      setTimeout(() => a.classList.remove("pressed"), 400);
+    }, 140);
   });
-  // Coming back with the Back button can restore the page mid-press
-  addEventListener("pageshow", () => {
-    document.querySelectorAll(".btn.pressed").forEach(b => b.classList.remove("pressed"));
-  });
+  // Coming back (Back button, or switching back from the Partiful app) can restore the page mid-press
+  const release = () => document.querySelectorAll(".btn.pressed").forEach(b => b.classList.remove("pressed"));
+  addEventListener("pageshow", release);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) release(); });
 </script>
 </body>
 </html>
