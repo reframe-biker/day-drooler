@@ -78,6 +78,30 @@
   .btn { -webkit-tap-highlight-color: transparent; }
   .btn:active, .btn.pressed { transform: translate(3px,3px); box-shadow: 0 0 0 var(--ink); }
   .btn:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
+  button.btn { cursor: pointer; width: 100%; }
+  /* Hangs below the button without making the row taller */
+  .btns { position: relative; }
+  .show.has-going .btns { transform: translateY(-12px); } /* re-centre button + caption as a pair */
+  .btns .going {
+    position: absolute; top: 100%; left: 0; right: 0; margin-top: 7px;
+    text-align: center; font: 700 .68rem var(--mono); letter-spacing: .16em; text-transform: uppercase;
+    color: rgba(251,241,211,.8); white-space: nowrap;
+  }
+
+  .rsvp-form { grid-column: 1 / -1; display: grid; gap: 10px; margin-top: 14px; }
+  .rsvp-form input[type=text], .rsvp-form input[type=email] {
+    width: 100%; font: 700 16px var(--mono); letter-spacing: .06em; color: var(--ink);
+    background: var(--cream); border: 3px solid var(--ink); border-radius: 4px; padding: 10px 12px;
+  }
+  .rsvp-form input::placeholder { color: rgba(0,0,0,.45); text-transform: uppercase; }
+  .rsvp-form input:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+  .rsvp-form .optin { display: flex; gap: 10px; align-items: center; font-size: .85rem; cursor: pointer; }
+  .rsvp-form .optin input { width: 20px; height: 20px; accent-color: var(--orange); margin: 0; flex: none; }
+  .rsvp-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .rsvp-form button[disabled] { opacity: .6; }
+  .rsvp-form .msg { margin: 0; font-size: .85rem; color: var(--orange); font-weight: 700; min-height: 1em; }
+  .rsvp-done { grid-column: 1 / -1; margin: 12px 0 0; font-size: .9rem; line-height: 1.5; }
+  .rsvp-done b { color: var(--orange); }
 
   .sticker {
     position: absolute; right: 0; top: 10px; transform: rotate(4deg);
@@ -127,7 +151,8 @@
   <p class="with"><span>WITH</span> KMPH + CATFISH MALAYSIA</p>
   <p class="note">CDs and tees at every show.<br>
     <a class="ig" href="https://www.instagram.com/daydrooler_/">Follow us on Instagram</a> ·
-    <a class="ig" href="https://open.spotify.com/artist/6SOsKyjWmTp7oTABBdOqzf">Listen on Spotify</a></p>
+    <a class="ig" href="https://open.spotify.com/artist/6SOsKyjWmTp7oTABBdOqzf">Listen on Spotify</a><br>
+    Booking: <a class="ig" href="mailto:booking@daydrooler.com">booking@daydrooler.com</a></p>
 </div>
 <div class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
@@ -136,18 +161,26 @@
      rsvp:    your Partiful link
      tickets: the venue's ticket link (leave "" to hide the button)
      date:    YYYY-MM-DD; shows auto-grey out the day after
-     time:    e.g. "8 PM" (leave "" to show nothing)                     */
+     time:    e.g. "8 PM" (leave "" to show nothing)
+     address: street address for the RSVP emails' map link                */
   const SHOWS = [
-    { date: "2026-12-13", venue: "Stone Church",    city: "Brattleboro, VT", time: "8 PM",  rsvp: "https://partiful.com/e/LJykKxWijiGWFHqahqk4", tickets: "" },
+    { date: "2026-12-13", venue: "Stone Church",    city: "Brattleboro, VT", time: "8 PM",  rsvp: "https://partiful.com/e/LJykKxWijiGWFHqahqk4", tickets: "", address: "210 Main St, Brattleboro, VT 05301" },
     // Burlington not confirmed yet; uncomment once it is (and add it back to og:description)
     // { date: "2026-12-15", venue: "Monkey Bar",     city: "Burlington, VT", time: "",      rsvp: "https://partiful.com/e/Hz8DhcMnjfQoQ19kFbDc", tickets: "" },
-    { date: "2026-12-16", venue: "O’Brien’s",       city: "Boston, MA",    time: "8 PM",  rsvp: "https://partiful.com/e/GQAJ4qiFzejiIWKTxcDV", tickets: "" },
-    { date: "2026-12-20", venue: "Mercury Lounge",  city: "New York, NY",  time: "6 PM",  rsvp: "https://partiful.com/e/Fsjw3qLEpITE5HhZZ2Su", tickets: "" },
-    { date: "2026-12-22", venue: "The Lilypad",     city: "Boston, MA",    time: "10 PM", rsvp: "https://partiful.com/e/2iZnXxu56ZiUVb7sip6u", tickets: "" },
+    { date: "2026-12-16", venue: "O’Brien’s",       city: "Boston, MA",    time: "8 PM",  rsvp: "https://partiful.com/e/GQAJ4qiFzejiIWKTxcDV", tickets: "", address: "3 Harvard Ave, Allston, MA 02134" },
+    { date: "2026-12-20", venue: "Mercury Lounge",  city: "New York, NY",  time: "6 PM",  rsvp: "https://partiful.com/e/Fsjw3qLEpITE5HhZZ2Su", tickets: "", address: "217 E Houston St, New York, NY 10002" },
+    { date: "2026-12-22", venue: "The Lilypad",     city: "Cambridge, MA", time: "10 PM", rsvp: "https://partiful.com/e/2iZnXxu56ZiUVb7sip6u", tickets: "", address: "1353 Cambridge St, Cambridge, MA 02139" },
   ];
 
   // Pre-save link for "Kick It Out" (leave "" to hide the button)
   const PRESAVE = "";
+
+  // RSVP Google Sheet's web app URL (see apps-script/README.md).
+  // Until it's set, RSVP buttons go to the Partiful links above.
+  const RSVP_URL = "https://script.google.com/a/macros/daydrooler.com/s/AKfycbywZCJdXd7nKM1vaojk5Tcfg1R6IOBZK30tS0qqj8u6OHP1EgsT4paLdsR9_L8fco3XgA/exec";
+
+  // "12 going" shows under a show's RSVP button once it has at least this many RSVPs
+  const SHOW_GOING_FROM = 5;
   /* ===================== */
 
   if (PRESAVE) { const p = document.getElementById("presave"); p.href = PRESAVE; p.hidden = false; }
@@ -155,6 +188,7 @@
   const M = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
   const today = new Date(); today.setHours(0,0,0,0);
   const list = document.getElementById("shows");
+  const done = RSVP_URL ? load("dd-rsvp", []) : [];
 
   for (const s of SHOWS) {
     const [y, m, d] = s.date.split("-").map(Number);
@@ -175,7 +209,14 @@
     }
 
     const btns = document.createElement("div"); btns.className = "btns";
-    if (s.rsvp) {
+    if (RSVP_URL) {
+      const b = document.createElement("button"); b.type = "button"; b.className = "btn rsvp";
+      b.textContent = done.includes(keyOf(s)) ? "GOING ✓" : "RSVP";
+      b.setAttribute("aria-expanded", "false");
+      b.setAttribute("aria-label", "RSVP for " + s.venue + ", " + s.city);
+      b.rsvpShow = s;
+      btns.append(b);
+    } else if (s.rsvp) {
       const a = document.createElement("a"); a.className = "btn rsvp"; a.href = s.rsvp;
       a.textContent = "RSVP"; a.setAttribute("aria-label", "RSVP for " + s.venue + ", " + s.city);
       btns.append(a);
@@ -187,7 +228,78 @@
     }
 
     li.append(date, venue, city, btns);
+    li.dataset.key = keyOf(s);
     list.append(li);
+  }
+
+  // ----- RSVP form (only when RSVP_URL is set) -----
+  function keyOf(s) { return s.date + " " + s.venue; }
+  function load(k, fallback) { try { return JSON.parse(localStorage.getItem(k)) || fallback; } catch (e) { return fallback; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  // Small caption under the RSVP button, once a show has enough RSVPs to be worth showing
+  function showCount(li, n) {
+    const btn = li.querySelector(".btn.rsvp");
+    let g = li.querySelector(".going");
+    li.classList.toggle("has-going", n >= SHOW_GOING_FROM);
+    if (n < SHOW_GOING_FROM) { if (g) g.remove(); return; }
+    if (!g) { g = document.createElement("div"); g.className = "going"; btn.after(g); }
+    g.textContent = n + " going";
+  }
+
+  if (RSVP_URL) {
+    fetch(RSVP_URL).then(r => r.json()).then(d => {
+      if (!d.ok) return;
+      for (const li of list.children) showCount(li, d.counts[li.dataset.key] || 0);
+    }).catch(() => {});
+  }
+
+  function toggleForm(btn) {
+    const li = btn.closest(".show"), s = btn.rsvpShow;
+    const open = li.querySelector(".rsvp-form, .rsvp-done");
+    if (open) { open.remove(); btn.setAttribute("aria-expanded", "false"); return; }
+
+    const me = load("dd-me", {});
+    const f = document.createElement("form"); f.className = "rsvp-form"; f.noValidate = true;
+    f.innerHTML =
+      '<input type="text" name="name" autocomplete="name" placeholder="Name" aria-label="Name" maxlength="80">' +
+      '<input type="email" name="email" autocomplete="email" inputmode="email" placeholder="Email" aria-label="Email" maxlength="120">' +
+      '<input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+      '<label class="optin"><input type="checkbox" name="list" checked> Send me new music and shows</label>' +
+      '<button type="submit" class="btn rsvp">I’M IN</button>' +
+      '<p class="msg" role="status"></p>';
+    const el = f.elements;
+    el.name.value = me.name || ""; el.email.value = me.email || "";
+    li.append(f); btn.setAttribute("aria-expanded", "true");
+    (el.name.value ? el.email : el.name).focus({ preventScroll: true });
+
+    f.addEventListener("submit", async e => {
+      e.preventDefault();
+      const msg = f.querySelector(".msg"), go = f.querySelector("button");
+      const name = el.name.value.trim(), email = el.email.value.trim();
+      if (!name) { msg.textContent = "Add your name"; el.name.focus(); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = "That email doesn’t look right"; el.email.focus(); return; }
+      msg.textContent = ""; go.disabled = true; go.textContent = "SENDING…";
+      try {
+        // text/plain keeps this a "simple" request, which Apps Script accepts cross-site
+        const r = await fetch(RSVP_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ show: keyOf(s), date: s.date, venue: s.venue, city: s.city, time: s.time, address: s.address || "",
+                                 name, email, list: el.list.checked, website: el.website.value }) });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error || "");
+        save("dd-me", { name, email });
+        const done = load("dd-rsvp", []); if (!done.includes(keyOf(s))) save("dd-rsvp", done.concat(keyOf(s)));
+        if (d.count) showCount(li, d.count);
+        btn.textContent = "GOING ✓";
+        const ok = document.createElement("p"); ok.className = "rsvp-done"; ok.setAttribute("role", "status");
+        ok.innerHTML = "<b>YOU’RE ON THE LIST.</b><br>";
+        ok.append(d.already ? "You’d already RSVP’d, so we updated it." : "Confirmation sent to " + email + ".");
+        f.replaceWith(ok);
+      } catch (err) {
+        msg.textContent = err.message && err.message.length < 60 ? err.message : "Couldn’t send that. Try again?";
+        go.disabled = false; go.textContent = "I’M IN";
+      }
+    });
   }
 
   // Coming back (Back button, or switching back from the Partiful app) can restore the page mid-press
@@ -211,11 +323,14 @@
   });
   list.addEventListener("click", e => {
     const a = e.target.closest(".btn");
-    if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (!a || a.type === "submit") return; // the form's own button submits normally
+    const opensForm = !!a.rsvpShow;
+    if (!opensForm && (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) return;
     e.preventDefault();
     a.classList.add("pressed");
     a.dataset.going = "1";
     setTimeout(() => {
+      if (opensForm) { release(); toggleForm(a); return; }
       location.href = a.href;
       // Partiful links open the app and leave this page in place, so release the button
       setTimeout(() => { delete a.dataset.going; a.classList.remove("pressed"); }, 400);
