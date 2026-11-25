@@ -11,7 +11,10 @@ new domain, so don't switch back to it.) It:
 - adds a row for each RSVP (a repeat RSVP for the same show updates the row instead)
 - emails a confirmation right away, with an "Add to calendar" link
 - emails a reminder the morning before the show (around 10am Eastern)
-- tells the site how many people are going to each show (counts only, never names)
+- adds a row for each email-list signup from the site's footer form: Show is blank,
+  Email list is "yes", and no confirmation or reminder email goes out
+- can report how many people are going to each show (counts only, never names);
+  the site no longer displays these counts
 
 The site keeps using the Partiful links until `RSVP_URL` in `index.html` is filled in.
 
@@ -36,8 +39,8 @@ The site keeps using the Partiful links until `RSVP_URL` in `index.html` is fill
    Click **Deploy** and copy the **Web app URL** (it ends in `/exec`).
 6. Put that URL in `index.html` (`const RSVP_URL = "…";`), then commit and push.
    The RSVP buttons now open the form on the site.
-7. **Test it:** RSVP to a show with your own email. You should see a row in the Sheet,
-   get the confirmation email, and see "1 going" on the site. Delete the row afterwards.
+7. **Test it:** RSVP to a show with your own email. You should see a row in the Sheet
+   and get the confirmation email. Delete the row afterwards.
 
 ## Changing the script later
 
@@ -56,7 +59,8 @@ Keep this file in sync so the repo has the current version.
 - **The email list** is every row with "yes" in the Email list column. To email them, filter
   on that column and copy the addresses into BCC. Once the list is in the hundreds, import
   it into a newsletter service (Kit, Buttondown) so unsubscribes are handled for you.
-- **To remove someone**, delete their row. Counts on the site update within a minute.
-- **The going count is public** (for example "3 going"); names and emails are never sent to the site.
+- **To remove someone**, delete their row.
+- **List-only signups** are the rows with a blank Show column. Someone who signs up and also
+  RSVPs gets one row for each.
 - This folder is public like the rest of the repo. The script holds no passwords or keys,
   so that's fine, but never paste the Sheet's contents in here.

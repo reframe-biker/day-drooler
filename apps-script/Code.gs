@@ -1,8 +1,10 @@
 /*
   Day Drooler RSVPs: a Google Apps Script attached to the band's RSVP Sheet.
 
-  - doPost:      the site sends an RSVP here; it becomes a row, and a confirmation email goes out
-  - doGet:       the site asks for "going" counts per show (counts only, never names)
+  - doPost:      the site sends an RSVP here; it becomes a row, and a confirmation email goes out.
+                 A submission with no show is an email-list signup: a row with only the email,
+                 Email list "yes", and no confirmation or reminder email
+  - doGet:       "going" counts per show (counts only, never names; the site no longer shows them)
   - dailyEmails: runs every morning; sends day-before reminders and retries confirmations
                  that hit Gmail's daily sending limit
   - setup:       run once by hand; makes the RSVPs tab and the daily trigger
@@ -23,7 +25,7 @@ const COPY = {
   reminderLead:        "Day Drooler plays {venue} tomorrow.",
   reminderClose:       "See you there.",
 
-  merch:               "CDs and tees at every show.",
+  merch:               "Merch at every show.",
   signoff:             "Day Drooler",
 
   calendarTitle:       "Day Drooler, live at {venue}",   // the event name in "Add to calendar"
@@ -58,7 +60,7 @@ function setup() {
 
 function doGet() {
   const counts = {};
-  for (const r of rows_()) counts[r[COL["Show"]]] = (counts[r[COL["Show"]]] || 0) + 1;
+  for (const r of rows_()) if (r[COL["Show"]]) counts[r[COL["Show"]]] = (counts[r[COL["Show"]]] || 0) + 1;
   return json_({ ok: true, counts });
 }
 
@@ -73,8 +75,9 @@ function doPost(e) {
     key: clean_(d.show, 120), date: clean_(d.date, 10), venue: clean_(d.venue, 80),
     city: clean_(d.city, 80), time: clean_(d.time, 20), address: clean_(d.address, 160),
   };
-  if (!name) return json_({ ok: false, error: "Add your name" });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json_({ ok: false, error: "That email doesn't look right" });
+  if (!show.key) return listSignup_(name, email);
+  if (!name) return json_({ ok: false, error: "Add your name" });
   if (!show.key || !/^\d{4}-\d{2}-\d{2}$/.test(show.date)) return json_({ ok: false, error: "bad request" });
 
   const lock = LockService.getScriptLock();
@@ -108,6 +111,29 @@ function doPost(e) {
   if (!already) trySend_(rowNum, "Confirmation", confirmation_);
   const count = rows_().filter(r => r[COL["Show"]] === show.key).length;
   return json_({ ok: true, already, count });
+}
+
+// Email list only (the footer signup): one row per email with Show left blank, never emailed.
+// dailyEmails skips these rows because their Show date is blank.
+function listSignup_(name, email) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sh = sheet_();
+    const i = rows_().findIndex(r => !r[COL["Show"]] && r[COL["Email"]] === email);
+    if (i >= 0) {
+      sh.getRange(i + 2, COL["Email list"] + 1).setValue("yes");
+      return json_({ ok: true, already: true });
+    }
+    const row = HEADERS.map(() => "");
+    row[COL["Submitted"]] = new Date();
+    row[COL["Name"]] = name; row[COL["Email"]] = email; row[COL["Email list"]] = "yes";
+    row[COL["Confirmation"]] = "n/a (list signup)"; row[COL["Reminder"]] = "n/a (list signup)";
+    sh.getRange(sh.getLastRow() + 1, 1, 1, HEADERS.length).setValues([row]);
+    return json_({ ok: true, already: false });
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function dailyEmails() {
