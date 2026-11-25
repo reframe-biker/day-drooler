@@ -6,7 +6,7 @@
 <title>Day Drooler Debut Tour</title>
 <meta name="description" content="Day Drooler Debut Tour dates, December 2026. RSVP and tickets.">
 <meta property="og:title" content="Day Drooler Debut Tour">
-<meta property="og:description" content="Brattleboro, Boston, NYC. December 2026.">
+<meta property="og:description" content="Brattleboro, Hanover, Boston, NYC. December 2026.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 70 70' shape-rendering='crispEdges'><clipPath id='r'><rect width='70' height='70' rx='15'/></clipPath><g clip-path='url(%23r)'><rect x='0' width='11' height='70' fill='%23fff'/><rect x='10' width='11' height='70' fill='%23FFE600'/><rect x='20' width='11' height='70' fill='%2300E5F2'/><rect x='30' width='11' height='70' fill='%2322D63B'/><rect x='40' width='11' height='70' fill='%23FF3DCB'/><rect x='50' width='11' height='70' fill='%23E8231C'/><rect x='60' width='10' height='70' fill='%231E17A8'/></g></svg>">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,7 +88,7 @@
   .openers { grid-row: 4; font-family: var(--mono); font-size: .75rem; letter-spacing: 0; color: rgba(251,241,211,.75); }
   .city .time, .city .door { color: var(--cream); margin-left: 1.2em; white-space: nowrap; }
   .btns { grid-row: 2 / span 3; grid-column: 2; display: flex; flex-direction: column; gap: 7px; align-self: start; width: 88px; }
-  .btn {
+  .btn, .badge {
     display: block; text-align: center; text-decoration: none; min-width: 88px;
     font-family: var(--cond); font-size: .95rem; letter-spacing: .04em; padding: 6px 11px 5px;
     border: 3px solid var(--ink); border-radius: 4px; box-shadow: 3px 3px 0 var(--ink);
@@ -96,6 +96,8 @@
   }
   .btn.rsvp, .btn.tix { background: var(--orange); color: var(--ink); }
   .btn.cream { background: var(--cream); color: var(--ink); }
+  /* Free shows: a label, not a link, so no press animation; orange outline to sit beside TICKETS */
+  .badge.free { background: transparent; border-color: var(--orange); color: var(--orange); cursor: default; transition: none; }
   .btn { -webkit-tap-highlight-color: transparent; }
   .btn:active, .btn.pressed { transform: translate(3px,3px); box-shadow: 0 0 0 var(--ink); }
   .btn:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
@@ -193,6 +195,7 @@
               (no RSVP). Without it, the row gets the RSVP button and form
      with:    openers, shown under the venue ("" to hide)
      door:    optional, e.g. "$10 at the door" ("" to hide)
+     free:    optional; true shows a "FREE!" label instead of TICKETS or RSVP
      date:    YYYY-MM-DD; shows auto-grey out the day after
      time:    e.g. "8 PM" (leave "" to show nothing)
      address: street address for the RSVP emails' map link                */
@@ -200,6 +203,8 @@
     { date: "2026-12-13", venue: "Stone Church",    city: "Brattleboro, VT", time: "8 PM",  rsvp: "https://partiful.com/e/LJykKxWijiGWFHqahqk4",
       tickets: "https://tickets.venuepilot.com/e/day-drooler-2026-12-13-stone-church-brattleboro-b77ad5",
       with: "Fool & The Band", address: "210 Main St, Brattleboro, VT 05301" },
+    { date: "2026-12-15", venue: "Sawtooth Kitchen", city: "Hanover, NH",   time: "6 PM",  rsvp: "",
+      tickets: "", free: true, with: "", address: "" },
     { date: "2026-12-16", venue: "O’Brien’s",       city: "Boston, MA",    time: "8 PM",  rsvp: "https://partiful.com/e/GQAJ4qiFzejiIWKTxcDV",
       tickets: "https://obrienspubboston.com/show/day-drooler/",
       with: "Catfish Malaysia, Lucky Streak", address: "3 Harvard Ave, Allston, MA 02134" },
@@ -267,7 +272,10 @@
     }
 
     const btns = document.createElement("div"); btns.className = "btns";
-    if (s.tickets) {
+    if (s.free) {
+      const f = document.createElement("div"); f.className = "badge free"; f.textContent = "FREE!";
+      btns.append(f);
+    } else if (s.tickets) {
       // Ticketed shows: TICKETS only, no RSVP
       const a = document.createElement("a"); a.className = "btn tix"; a.href = s.tickets; a.target = "_blank"; a.rel = "noopener";
       a.textContent = "TICKETS"; a.setAttribute("aria-label", "Tickets for " + s.venue + ", " + s.city);
